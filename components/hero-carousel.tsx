@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import useEmblaCarousel from "embla-carousel-react"
 import Autoplay from "embla-carousel-autoplay"
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -55,9 +56,24 @@ const slides = [
   },
 ]
 
+const textVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (custom: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      delay: custom * 0.15,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
+}
+
 export function HeroCarousel() {
   const [selectedIndex, setSelectedIndex] = useState(0)
-  
+  const [isAnimating, setIsAnimating] = useState(false)
+
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true },
     [Autoplay({ delay: 5000, stopOnInteraction: false })]
@@ -80,7 +96,9 @@ export function HeroCarousel() {
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return
+    setIsAnimating(true)
     setSelectedIndex(emblaApi.selectedScrollSnap())
+    setTimeout(() => setIsAnimating(false), 100)
   }, [emblaApi])
 
   useEffect(() => {
@@ -97,13 +115,18 @@ export function HeroCarousel() {
     <section className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[85vh] overflow-hidden">
       <div ref={emblaRef} className="h-full overflow-hidden">
         <div className="flex h-full">
-          {slides.map((slide) => (
+          {slides.map((slide, index) => (
             <div
               key={slide.id}
               className="relative flex-[0_0_100%] min-w-0 h-full"
             >
               {/* Background Image */}
-              <div className="absolute inset-0">
+              <motion.div
+                className="absolute inset-0"
+                initial={{ scale: 1.1 }}
+                animate={{ scale: selectedIndex === index ? 1 : 1.1 }}
+                transition={{ duration: 6, ease: "linear" }}
+              >
                 <img
                   src={slide.image}
                   alt={slide.title}
@@ -117,49 +140,74 @@ export function HeroCarousel() {
                       : "bg-white/20"
                   )}
                 />
-              </div>
+              </motion.div>
 
               {/* Content */}
               <div className="relative h-full flex items-center justify-center text-center px-4">
-                <div className="max-w-2xl space-y-4 sm:space-y-6">
-                  <p
-                    className={cn(
-                      "text-xs sm:text-sm font-medium tracking-[0.3em] uppercase animate-in fade-in slide-in-from-bottom-4 duration-700",
-                      slide.theme === "dark" ? "text-white/80" : "text-foreground/70"
-                    )}
-                  >
-                    {slide.subtitle}
-                  </p>
-                  <h1
-                    className={cn(
-                      "font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100 text-balance",
-                      slide.theme === "dark" ? "text-white" : "text-foreground"
-                    )}
-                  >
-                    {slide.title}
-                  </h1>
-                  <p
-                    className={cn(
-                      "text-sm sm:text-base md:text-lg max-w-md mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200",
-                      slide.theme === "dark" ? "text-white/90" : "text-foreground/80"
-                    )}
-                  >
-                    {slide.description}
-                  </p>
-                  <div className="animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300 pt-2">
-                    <Button
-                      size="lg"
-                      className={cn(
-                        "px-8 sm:px-12 py-5 sm:py-6 text-xs sm:text-sm font-semibold tracking-widest transition-all duration-300",
-                        slide.theme === "dark"
-                          ? "bg-white text-black hover:bg-white/90"
-                          : "bg-primary text-primary-foreground hover:bg-primary/90"
-                      )}
+                <AnimatePresence mode="wait">
+                  {selectedIndex === index && !isAnimating && (
+                    <motion.div
+                      key={`content-${slide.id}`}
+                      className="max-w-2xl space-y-4 sm:space-y-6"
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
                     >
-                      {slide.cta}
-                    </Button>
-                  </div>
-                </div>
+                      <motion.p
+                        custom={0}
+                        variants={textVariants}
+                        className={cn(
+                          "text-xs sm:text-sm font-medium tracking-[0.3em] uppercase",
+                          slide.theme === "dark" ? "text-white/80" : "text-foreground/70"
+                        )}
+                      >
+                        {slide.subtitle}
+                      </motion.p>
+                      <motion.h1
+                        custom={1}
+                        variants={textVariants}
+                        className={cn(
+                          "font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance",
+                          slide.theme === "dark" ? "text-white" : "text-foreground"
+                        )}
+                      >
+                        {slide.title}
+                      </motion.h1>
+                      <motion.p
+                        custom={2}
+                        variants={textVariants}
+                        className={cn(
+                          "text-sm sm:text-base md:text-lg max-w-md mx-auto",
+                          slide.theme === "dark" ? "text-white/90" : "text-foreground/80"
+                        )}
+                      >
+                        {slide.description}
+                      </motion.p>
+                      <motion.div
+                        custom={3}
+                        variants={textVariants}
+                        className="pt-2"
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button
+                            size="lg"
+                            className={cn(
+                              "px-8 sm:px-12 py-5 sm:py-6 text-xs sm:text-sm font-semibold tracking-widest transition-all duration-300",
+                              slide.theme === "dark"
+                                ? "bg-white text-black hover:bg-white/90"
+                                : "bg-primary text-primary-foreground hover:bg-primary/90"
+                            )}
+                          >
+                            {slide.cta}
+                          </Button>
+                        </motion.div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           ))}
@@ -167,32 +215,51 @@ export function HeroCarousel() {
       </div>
 
       {/* Navigation Arrows */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-foreground shadow-lg transition-all duration-300 hover:scale-105"
-        onClick={scrollPrev}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
       >
-        <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
-        <span className="sr-only">Previous slide</span>
-      </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-foreground shadow-lg transition-all duration-300 hover:scale-105"
+          onClick={scrollPrev}
+        >
+          <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+          <span className="sr-only">Previous slide</span>
+        </Button>
+      </motion.div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-foreground shadow-lg transition-all duration-300 hover:scale-105"
-        onClick={scrollNext}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
       >
-        <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
-        <span className="sr-only">Next slide</span>
-      </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-foreground shadow-lg transition-all duration-300 hover:scale-105"
+          onClick={scrollNext}
+        >
+          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+          <span className="sr-only">Next slide</span>
+        </Button>
+      </motion.div>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+        className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3"
+      >
         {slides.map((_, index) => (
-          <button
+          <motion.button
             key={index}
             onClick={() => scrollTo(index)}
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.9 }}
             className={cn(
               "h-2 rounded-full transition-all duration-300",
               selectedIndex === index
@@ -201,9 +268,9 @@ export function HeroCarousel() {
             )}
           >
             <span className="sr-only">Go to slide {index + 1}</span>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
     </section>
   )
 }

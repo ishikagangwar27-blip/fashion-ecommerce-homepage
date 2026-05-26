@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Star, Heart, ShoppingBag } from "lucide-react"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -104,29 +105,72 @@ const products = [
   },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+}
+
 export function FeaturedProducts() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="text-center mb-8 sm:mb-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+        className="text-center mb-8 sm:mb-12"
+      >
         <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
           FEATURED PRODUCTS
         </h2>
         <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
           Handpicked pieces you&apos;ll love
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+      >
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
-      </div>
+      </motion.div>
 
-      <div className="text-center mt-10 sm:mt-12">
-        <Button variant="outline" size="lg" className="px-10 sm:px-16 tracking-widest font-medium">
-          VIEW ALL PRODUCTS
-        </Button>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="text-center mt-10 sm:mt-12"
+      >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button variant="outline" size="lg" className="px-10 sm:px-16 tracking-widest font-medium">
+            VIEW ALL PRODUCTS
+          </Button>
+        </motion.div>
+      </motion.div>
     </section>
   )
 }
@@ -149,70 +193,112 @@ function ProductCard({ product }: { product: Product }) {
   const [isWishlisted, setIsWishlisted] = useState(false)
 
   return (
-    <div
+    <motion.div
+      variants={itemVariants}
       className="group relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Product Image */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-secondary">
-        <img
-          src={isHovered ? product.hoverImage : product.image}
+        <motion.img
+          src={product.image}
           alt={product.name}
-          className="h-full w-full object-cover transition-all duration-500 ease-out group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover"
+          animate={{ 
+            opacity: isHovered ? 0 : 1,
+            scale: isHovered ? 1.05 : 1 
+          }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+        <motion.img
+          src={product.hoverImage}
+          alt={`${product.name} alternate view`}
+          className="absolute inset-0 h-full w-full object-cover"
+          animate={{ 
+            opacity: isHovered ? 1 : 0,
+            scale: isHovered ? 1.05 : 1.1 
+          }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         />
 
         {/* Badges */}
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-2">
           {product.isNew && (
-            <span className="bg-primary text-primary-foreground text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-primary text-primary-foreground text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full"
+            >
               NEW
-            </span>
+            </motion.span>
           )}
           {product.isSale && (
-            <span className="bg-accent text-accent-foreground text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-accent text-accent-foreground text-[10px] sm:text-xs font-semibold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full"
+            >
               SALE
-            </span>
+            </motion.span>
           )}
         </div>
 
         {/* Wishlist Button */}
-        <button
+        <motion.button
           onClick={() => setIsWishlisted(!isWishlisted)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           className={cn(
-            "absolute top-2 sm:top-3 right-2 sm:right-3 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-all duration-300",
-            "hover:bg-white hover:scale-110",
+            "absolute top-2 sm:top-3 right-2 sm:right-3 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center transition-colors",
+            "hover:bg-white",
             "focus:outline-none focus:ring-2 focus:ring-primary"
           )}
         >
-          <Heart
-            className={cn(
-              "h-4 w-4 sm:h-5 sm:w-5 transition-colors",
-              isWishlisted ? "fill-red-500 text-red-500" : "text-foreground"
-            )}
-          />
+          <motion.div
+            animate={isWishlisted ? { scale: [1, 1.3, 1] } : {}}
+            transition={{ duration: 0.3 }}
+          >
+            <Heart
+              className={cn(
+                "h-4 w-4 sm:h-5 sm:w-5 transition-colors",
+                isWishlisted ? "fill-red-500 text-red-500" : "text-foreground"
+              )}
+            />
+          </motion.div>
           <span className="sr-only">Add to wishlist</span>
-        </button>
+        </motion.button>
 
         {/* Quick Add Button */}
-        <div
-          className={cn(
-            "absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 transition-all duration-300",
-            isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-          )}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ 
+            opacity: isHovered ? 1 : 0, 
+            y: isHovered ? 0 : 10 
+          }}
+          transition={{ duration: 0.3 }}
+          className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4"
         >
-          <Button
-            className="w-full text-xs sm:text-sm font-medium tracking-wide shadow-lg"
-            size="sm"
-          >
-            <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-            ADD TO BAG
-          </Button>
-        </div>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button
+              className="w-full text-xs sm:text-sm font-medium tracking-wide shadow-lg"
+              size="sm"
+            >
+              <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+              ADD TO BAG
+            </Button>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Product Info */}
-      <div className="mt-3 sm:mt-4 space-y-1 sm:space-y-2">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="mt-3 sm:mt-4 space-y-1 sm:space-y-2"
+      >
         <h3 className="text-xs sm:text-sm font-medium line-clamp-2 group-hover:text-muted-foreground transition-colors">
           {product.name}
         </h3>
@@ -248,7 +334,7 @@ function ProductCard({ product }: { product: Product }) {
             </span>
           )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
